@@ -6,7 +6,7 @@ const multer = require("multer");
 
 // idea for further user functionality -> file system (with folders)
 
-// const upload = multer({ dest: "uploads/tmp/" });
+// this will change to an S3 bucket!
 const upload = multer({ 
     dest: "uploads/tmp/",
     limits: {
@@ -16,6 +16,8 @@ const upload = multer({
 });
 
 // router.put("/upload", authenticateToken, upload.single("video"), controller.uploadFile);
+
+// this will be replaced with upload to S3 bucket!
 router.put("/upload", authenticateToken, (req, res, next) => {
     req.setTimeout(300000); // 5 minutes
     next();

@@ -1,25 +1,25 @@
 const {
-    MockFolderDB,
-    MockFileDB
+    MockFolderDB, // remove
+    MockFileDB, // remove
+    Folder
 } = require("../../db");
-const { v4: uuidv4 } = require('uuid');
 
-exports.create = (userId, folderName) => {
-    const folderId = uuidv4();
-    const createdAt = new Date().toISOString();
-
-    for (let i = 0; i < MockFolderDB.length; i++) {
-        if (MockFolderDB[i].folderName === folderName && MockFolderDB[i].userId === userId) {
+exports.create = async (userId, folderName) => {
+    try {
+        const existingFolder = await Folder.findOne({ userKey: userId, folderName: folderName });
+        if (existingFolder) {
             return false;
         }
-    }
 
-    MockFolderDB.push({
-        folderId: folderId,
-        userId: userId,
-        folderName: folderName,
-        createdAt: createdAt,
-    })
+        const folder = new Folder({
+            userKey: userId, // THIS MUST BE AWS USER KEY
+            folderName: folderName,
+        })
+
+        await folder.save();
+    } catch (err) {
+        console.log("Error caught: ", e);
+    }
 
     return true;
 }

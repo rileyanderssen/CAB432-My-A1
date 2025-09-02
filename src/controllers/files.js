@@ -32,11 +32,11 @@ exports.uploadFile = (req, res) => {
     const filePath = file.path;
     const fileSize = file.size;
 
-    if (folderId !== "") {
-        if (!Folder.exists(folderId)) {
-            return res.status(400).json({ error: FOLDER_NOT_EXISTS });
-        }
-    }
+    // if (folderId !== "") {
+    //     if (!Folder.exists(folderId)) {
+    //         return res.status(400).json({ error: FOLDER_NOT_EXISTS });
+    //     }
+    // }
 
     const uploadStatus = File.upload(
         userId,

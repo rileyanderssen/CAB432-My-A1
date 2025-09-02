@@ -1,45 +1,42 @@
 const {
-    MockFileDB
+    MockFileDB, // remove this
+    File
 } = require("../../db");
 const { 
     DeterminePaginationBounds 
 } = require("../helpers/data");
 
-const { v4: uuidv4 } = require('uuid');
-
-exports.upload = (
+exports.upload = async (
     userId,
     userTitle,
-    folderId,
+    folderId, 
     userDescription,
     fileName,
     fileType,
     filePath,
     fileSize,
 ) => {
-    const fileId = uuidv4();
-    const uploadedAt = new Date().toISOString();
-
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].title === userTitle && MockFileDB[i].userId === userId) {
+    try {
+        const existingFile = await File.findOne({ userKey: userId, title: userTitle });
+        if (existingFile) {
             return false;
         }
+
+        const file = new File({
+            userKey: userId,
+            folderKey: folderId || null,
+            title: userTitle,
+            description: userDescription,
+            fileName: fileName,
+            fileType: fileType,
+            filePath: filePath,
+            fileSize: fileSize,
+        })
+
+        await file.save();
+    } catch (err) {
+        console.log("Error caught: ", err);
     }
-
-    MockFileDB.push({
-        userId: userId,
-        fileId: fileId,
-        title: userTitle,
-        folderId: folderId,
-        description: userDescription,
-        fileName: fileName,
-        fileType: fileType,
-        filePath: filePath,
-        fileSize: fileSize,
-        uploadedAt: uploadedAt,
-    });
-
-    return true;
 }
 
 exports.getAll = (userId, pageNumber, titleFilter) => {

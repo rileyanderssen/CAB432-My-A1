@@ -7,11 +7,11 @@ const {
     D_UPDATE_SUCCESS
 } = require("../constants/error");
 
-exports.createFolder = (req, res) => {
+exports.createFolder = async (req, res) => {
     const folderName = req.body.folderName;
     const userId = req.userDetails.id;
 
-    const folderStatus = Folder.create(userId, folderName);
+    const folderStatus = await Folder.create(userId, folderName);
 
     if (!folderStatus) {
         return res.status(400).json({ error: FOLDER_ALREADY_EXISTS });
