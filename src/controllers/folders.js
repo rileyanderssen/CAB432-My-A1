@@ -20,10 +20,10 @@ exports.createFolder = async (req, res) => {
     return res.status(200).json({ message: FOLDER_SUCCESS });
 }
 
-exports.viewFolder = (req, res) => {
+exports.viewFolder = async (req, res) => {
     const folderId = req.body.folderId;
 
-    const folderContent = Folder.view(folderId);
+    const folderContent = await Folder.view(folderId);
 
     if (!folderContent) {
         return res.status(400).json({ error: FOLDER_NOT_EXISTS });

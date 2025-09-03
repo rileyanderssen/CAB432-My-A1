@@ -1,8 +1,10 @@
 const {
     MockFolderDB, // remove
     MockFileDB, // remove
-    Folder
+    Folder,
+    File
 } = require("../../db");
+const mongoose = require('mongoose');
 
 exports.create = async (userId, folderName) => {
     try {
@@ -12,7 +14,7 @@ exports.create = async (userId, folderName) => {
         }
 
         const folder = new Folder({
-            userKey: userId, // THIS MUST BE AWS USER KEY
+            userKey: userId,
             folderName: folderName,
         })
 
@@ -24,21 +26,20 @@ exports.create = async (userId, folderName) => {
     return true;
 }
 
-exports.view = (folderId) => {
-    if (this.exists(folderId)) {
-        const folderContent = [];
+exports.view = async (folderId) => {
+    if (!mongoose.Types.ObjectId.isValid(folderId)) {
+        return null;
+    }
 
-        for (let i = 0; i < MockFileDB.length; i++) {
-            if (MockFileDB[i].folderId === folderId) {
-                folderContent.push(MockFileDB[i]);
-            }
-        }
-
-        return folderContent;
+    const files = await File.find({ folderKey: folderId });
+    if (files) {
+        return files;
     }
 
     return null;
 }
+
+// UP TO HERE
 
 exports.delete = (folderId) => {
     if (!this.exists(folderId)) {
