@@ -1,5 +1,4 @@
 const File = require("../models/file");
-const Folder = require("../models/folder");
 const { 
     DeterminePaginationResponse 
 } = require("../helpers/data");
@@ -146,7 +145,7 @@ exports.updateFileByTitle = async (req, res) => {
     if (updateStatus === "Not Exists" || updateStatus === "Invalid ID") {
         return res.status(404).json({ error: FILE_NOT_EXIST });
     } else if (updateStatus === "Exists") {
-        return res.status(400).json({ error: "Cannot have the same title has another file." });
+        return res.status(400).json({ error: "Cannot have the same title as another file." });
     } 
 
     if (!updateStatus) {

@@ -31,8 +31,17 @@ const fileSchema = new mongoose.Schema({
     uploadedAt: { type: Date, default: Date.now }
 })
 
+const transcodeSchema = new mongoose.Schema({
+    userKey: { type: String, required: true },
+    fileKey: { type: mongoose.Schema.Types.ObjectId, required: false, ref: 'File' },
+    url: { type: String, required: true }, // this will be the S3 link
+    format: { type: String, required: true },
+    transcodedAt: { type: Date, default: Date.now }
+})
+
 const Folder = mongoose.model('Folder', folderSchema);
 const File = mongoose.model('File', fileSchema);
+const Transcode = mongoose.model('Transcode', transcodeSchema);
 // module.exports = Folder;
 
 
@@ -60,7 +69,8 @@ module.exports = {
     MockTranscodeDB, // remove
     MockFolderDB, // remove
     Folder,
-    File
+    File,
+    Transcode
 }
 
 

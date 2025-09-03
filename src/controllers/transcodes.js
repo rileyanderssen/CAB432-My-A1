@@ -151,17 +151,63 @@ exports.transcodeFile = (req, res) => {
                     fs.unlinkSync(inputPath);
                 }
 
+                // S3 -> this is where you will upload the transcoded file 
+                // and then parse the S3 location link into the put transcode function
+                // instead place of download url
+                // NOTE: below this function I added some commented code from Claud AI to show the process
+
                 const downloadUrl = `${req.protocol}://${req.get("host")}/videos/${path.basename(outputPath)}`;
                 Transcode.putTranscode(outputPath, downloadUrl, fileId, transcodeTo, userId);
 
                 res.json({ message: TRANSCODE_SUCCESS, path: outputPath, downloadUrl: downloadUrl });
             })
             .save(outputPath);
+
+            // .on("end", async () => {
+            //     try {
+            //         if (!isLoadTest) {
+            //             fs.unlinkSync(inputPath);
+            //         }
+
+            //         // Upload to S3
+            //         const fileContent = fs.readFileSync(outputPath);
+            //         const fileName = `transcoded/${Date.now()}-${path.basename(outputPath)}`;
+                    
+            //         const uploadParams = {
+            //             Bucket: 'your-bucket-name',
+            //             Key: fileName,
+            //             Body: fileContent,
+            //             ContentType: 'video/mp4' // or appropriate mime type
+            //         };
+
+            //         const s3Result = await s3.upload(uploadParams).promise();
+            //         console.log("S3 upload successful:", s3Result.Location);
+
+            //         // Clean up local file after S3 upload
+            //         fs.unlinkSync(outputPath);
+
+            //         // Use S3 URL instead of local URL
+            //         const downloadUrl = s3Result.Location;
+            //         Transcode.putTranscode(outputPath, downloadUrl, fileId, transcodeTo, userId);
+
+            //         res.json({ 
+            //             message: TRANSCODE_SUCCESS, 
+            //             path: s3Result.Location, 
+            //             downloadUrl: downloadUrl 
+            //         });
+
+            //     } catch (s3Error) {
+            //         console.error("S3 upload failed:", s3Error);
+            //         res.status(500).json({ error: "S3 upload failed" });
+            //     }
+            // })
     } catch (err) {
         return res.status(500).json({ error: err })
     }
 }
 
+// S3 -> this will need to be replaced with the S3 link to download it
+// let me know when S3 is done and I can do this part as it is DB related 
 exports.downloadTranscode = (req, res) => {
     const fileName = req.params.fileName;
     const filePath = path.join(__dirname, 'uploads', fileName);
