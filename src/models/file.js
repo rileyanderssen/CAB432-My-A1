@@ -1,10 +1,9 @@
 const {
-    MockFileDB, // remove this
     File
 } = require("../../db");
-const { 
-    DeterminePaginationBounds 
-} = require("../helpers/data");
+// const { 
+//     DeterminePaginationBounds 
+// } = require("../helpers/data");
 const mongoose = require('mongoose');
 
 exports.upload = async (
@@ -23,6 +22,11 @@ exports.upload = async (
             return false;
         }
 
+        // S3 -> will need to upload file here
+        // will most likely need to parse the file as a param to this function in /controllers/files.js
+        // in the upload file function
+        // ... the file is there, will just need to add the paramater
+
         const file = new File({
             userKey: userId,
             folderKey: folderId || null,
@@ -30,7 +34,7 @@ exports.upload = async (
             description: userDescription,
             fileName: fileName,
             fileType: fileType,
-            filePath: filePath,
+            filePath: filePath, // replace this with the S3 url
             fileSize: fileSize,
         })
 

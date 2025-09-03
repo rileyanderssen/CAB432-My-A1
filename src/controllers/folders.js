@@ -32,18 +32,18 @@ exports.viewFolder = async (req, res) => {
     return res.status(200).json({ content: folderContent });
 }
 
-exports.viewAll = (req, res) => {
+exports.viewAll = async (req, res) => {
     const userId = req.userDetails.id;
 
-    const allContent = Folder.all(userId);
+    const allContent = await Folder.all(userId);
 
     return res.status(200).json({ root: allContent });
 }
 
-exports.deleteFolder = (req, res) => {
+exports.deleteFolder = async (req, res) => {
     const folderId = req.body.folderId;
 
-    const deleteStatus = Folder.delete(folderId);
+    const deleteStatus = await Folder.delete(folderId);
 
     if (!deleteStatus) {
         return res.status(400).json({ error: FOLDER_NOT_EXISTS });
@@ -52,17 +52,22 @@ exports.deleteFolder = (req, res) => {
     return res.status(200).json({ message: D_DELETE_SUCCESS });
 }
 
-exports.updateFolder = (req, res) => {
+exports.updateFolder = async (req, res) => {
     const folderId = req.body.folderId;
     const newFolderName = req.body.newFolderName;
 
-    console.log("Updating to ", newFolderName);
+    const updateStatus = await Folder.update(folderId, newFolderName);
 
-    const updateStatus = Folder.update(folderId, newFolderName);
+
+    if (updateStatus === "Not Exists" || updateStatus === "Invalid ID") {
+        return res.status(404).json({ error: FOLDER_NOT_EXISTS });
+    } else if (updateStatus === "Exists") {
+        return res.status(400).json({ error: "Cannot have the same folder name as another folder." });
+    } 
 
     if (!updateStatus) {
         return res.status(400).json({ error: FOLDER_NOT_EXISTS });
-    } 
+    }
 
     return res.status(200).json({ message: D_UPDATE_SUCCESS  });
 }

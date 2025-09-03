@@ -1,82 +1,75 @@
 const {
-    MockTranscodeDB,
-    MockFileDB,
+    MockFileDB, // remove
+    Transcode,
+    File
 } = require("../../db");
 const { 
     DeterminePaginationBounds 
 } = require("../helpers/data");
+const mongoose = require('mongoose');
 
 const { v4: uuidv4 } = require('uuid');
 
-exports.fileInputPath = (
+// S3 - will need to fetch the url to the S3 location here
+// where the transcoded file is stored after transcoding
+exports.fileInputPath = async (
     userId,
     fileId
 ) => {
     let inputPath = "";
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].fileId === fileId && MockFileDB[i].userId === userId) {
-            inputPath = MockFileDB[i].filePath;
-            break;
-        }
-    }
-
-    if (!inputPath) {
-        return "";
-    }
-
-    return inputPath;
-}
-
-// technically, we don't need to store userId in most places because fileId is unique to a user
-// however, to make using a mock database easier (without joins), we will add userId in for now
-exports.putTranscode = (filePath, downloadUrl, fileId, format, userId) => {
-    const transcodeId = uuidv4();
-    const transcodedAt = new Date().toISOString();
-
-    MockTranscodeDB.push({
-        transcodeId: transcodeId,
-        userId: userId,
-        fileId: fileId,
-        downloadUrl: downloadUrl,
-        format: format,
-        filePath: filePath,
-        transcodedAt: transcodedAt,
-    })
-}
-
-exports.getAll = (userId, pageNumber) => {
-    const { upperBound, lowerBound } = DeterminePaginationBounds(pageNumber);
-    
-    const allTranscodes = [];
-    for (let i = lowerBound; i <= upperBound; i++) {
-        if (MockTranscodeDB[i]) {
-            if (MockTranscodeDB[i].userId === userId) {
-                allTranscodes.push(MockTranscodeDB[i]);
-            }
-        } else {
-            return allTranscodes;
-        }
-    }
-
-    return allTranscodes;
-}
-
-exports.getById = (userId, transcodeId) => {
-    for (let i = 0; i < MockTranscodeDB.length; i++) {
-        if (MockTranscodeDB[i].transcodeId === transcodeId && MockTranscodeDB[i].userId === userId) {
-            return MockTranscodeDB[i];
-        }
+    const file = await File.findOne({ userKey: userId, _id: fileId });
+    if (file) {
+        return file.filePath;
     }
 
     return null;
 }
 
-exports.deleteById = (userId, transcodeId) => {
-    for (let i = 0; i < MockTranscodeDB.length; i++) {
-        if (MockTranscodeDB[i].userId === userId && MockTranscodeDB[i].transcodeId === transcodeId) {
-            MockTranscodeDB.splice(i, 1);
-            return true;
-        }
+// filePath is redundant now, we can do a code clean up later
+exports.putTranscode = async (filePath, downloadUrl, fileId, format, userId) => {
+    const transcode = new Transcode({
+        userKey: userId,
+        fileKey: fileId,
+        url: downloadUrl, // S3 -> this will be the link to S3 location
+        format: format,
+    })
+
+    await transcode.save();
+}
+
+exports.getAll = async (userId, pageNumber) => {
+    const pageSize = 5;
+
+    const transcodes = await Transcode
+                                .find({ userKey: userId })
+                                .skip((pageNumber - 1) * pageSize)
+                                .limit(pageSize)
+
+    return transcodes;
+    
+}
+
+exports.getById = async (userId, transcodeId) => {
+    if (!mongoose.Types.ObjectId.isValid(transcodeId)) {
+        return null;
+    }
+
+    const transcode = await Transcode.find({ userKey: userId, _id: transcodeId });
+    if (transcode) {
+        return transcode;
+    }
+
+    return null;
+}
+
+exports.deleteById = async (userId, transcodeId) => {
+    if (!mongoose.Types.ObjectId.isValid(transcodeId)) {
+        return false;
+    }
+
+    const deletedTranscode = await Transcode.deleteOne({ _id: transcodeId, userKey: userId });
+    if (deletedTranscode) {
+        return true;
     }
 
     return false;
