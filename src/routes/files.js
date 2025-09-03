@@ -17,7 +17,7 @@ const upload = multer({
 
 // router.put("/upload", authenticateToken, upload.single("video"), controller.uploadFile);
 
-// this will be replaced with upload to S3 bucket!
+// this will be replaced with upload to S3 bucket
 router.put("/upload", authenticateToken, (req, res, next) => {
     req.setTimeout(300000); // 5 minutes
     next();

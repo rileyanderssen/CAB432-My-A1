@@ -32,12 +32,6 @@ exports.uploadFile = (req, res) => {
     const filePath = file.path;
     const fileSize = file.size;
 
-    // if (folderId !== "") {
-    //     if (!Folder.exists(folderId)) {
-    //         return res.status(400).json({ error: FOLDER_NOT_EXISTS });
-    //     }
-    // }
-
     const uploadStatus = File.upload(
         userId,
         userTitle,
@@ -56,7 +50,7 @@ exports.uploadFile = (req, res) => {
     return res.status(200).json({ message: UPLOAD_SUCCESS });
 }
 
-exports.getAllFiles = (req, res) => {
+exports.getAllFiles = async (req, res) => {
     const userId = req.userDetails.id;
     let pageNumber = req.body.pageNumber;
     let titleFilter = req.body.titleFilter;
@@ -74,7 +68,7 @@ exports.getAllFiles = (req, res) => {
     }
 
     pageNumber = parseInt(pageNumber);
-    const files = File.getAll(userId, pageNumber, titleFilter);
+    const files = await File.getAll(userId, pageNumber, titleFilter);
 
     if (files.length === 0) {
         if (pageNumber === 1) {
@@ -90,11 +84,11 @@ exports.getAllFiles = (req, res) => {
     });
 }
 
-exports.getFileByTitle = (req, res) => {
+exports.getFileByTitle = async (req, res) => {
     const title = req.body.title;
     const userId = req.userDetails.id;
 
-    const file = File.getByTitle(userId, title);
+    const file = await File.getByTitle(userId, title);
 
     if (!file) {
         return res.status(400).json({ error: FILE_NOT_FOUND });
@@ -103,11 +97,11 @@ exports.getFileByTitle = (req, res) => {
     return res.status(200).json({ file: file });
 }
 
-exports.getFileById = (req, res) => {
+exports.getFileById = async (req, res) => {
     const fileId = req.body.fileId;
     const userId = req.userDetails.id;
 
-    const file = File.getById(userId, fileId);
+    const file = await File.getById(userId, fileId);
 
     if (!file) {
         return res.status(400).json({ error: FILE_NOT_FOUND });
@@ -116,11 +110,11 @@ exports.getFileById = (req, res) => {
     return res.status(200).json({ file: file });
 }
 
-exports.deleteFileByTitle = (req, res) => {
+exports.deleteFileByTitle = async (req, res) => {
     const title = req.body.title;
     const userId = req.userDetails.id;
 
-    const deleteStatus = File.deleteByTitle(userId, title);
+    const deleteStatus = await File.deleteByTitle(userId, title);
 
     if (!deleteStatus) {
         return res.status(400).json({ error: FILE_NOT_EXIST });
@@ -129,11 +123,11 @@ exports.deleteFileByTitle = (req, res) => {
     return res.status(200).json({ message: DELETE_SUCCESS });
 }
 
-exports.deleteFileById = (req, res) => {
+exports.deleteFileById = async (req, res) => {
     const fileId = req.body.fileId;
     const userId = req.userDetails.id;
 
-    const deleteStatus = File.deleteById(userId, fileId);
+    const deleteStatus = await File.deleteById(userId, fileId);
 
     if (!deleteStatus) {
         return res.status(400).json({ error: FILE_NOT_EXIST });
@@ -142,13 +136,18 @@ exports.deleteFileById = (req, res) => {
     return res.status(200).json({ message: DELETE_SUCCESS });
 }
 
-exports.updateFileByTitle = (req, res) => {
+exports.updateFileByTitle = async (req, res) => {
     const oldTitle = req.body.title;
     const newTitle = req.body.newTitle;
     const newDescription = req.body.newDescription;
     const userId = req.userDetails.id;
 
-    const updateStatus = File.updateByTitle(userId, oldTitle, newTitle, newDescription);
+    const updateStatus = await File.updateByTitle(userId, oldTitle, newTitle, newDescription);
+    if (updateStatus === "Not Exists" || updateStatus === "Invalid ID") {
+        return res.status(404).json({ error: FILE_NOT_EXIST });
+    } else if (updateStatus === "Exists") {
+        return res.status(400).json({ error: "Cannot have the same title has another file." });
+    } 
 
     if (!updateStatus) {
         return res.status(400).json({ error: FILE_NOT_EXIST });
@@ -161,13 +160,18 @@ exports.updateFileByTitle = (req, res) => {
     })
 }
 
-exports.updateFileById = (req, res) => {
+exports.updateFileById = async (req, res) => {
     const fileId = req.body.fileId;
     const newTitle = req.body.newTitle;
     const newDescription = req.body.newDescription;
     const userId = req.userDetails.id;
 
-    const updateStatus = File.updateById(userId, fileId, newTitle, newDescription);
+    const updateStatus = await File.updateById(userId, fileId, newTitle, newDescription);
+    if (updateStatus === "Not Exists" || updateStatus === "Invalid ID") {
+        return res.status(404).json({ error: FILE_NOT_EXIST });
+    } else if (updateStatus === "Exists") {
+        return res.status(400).json({ error: "Cannot have the same title has another file." });
+    } 
 
     if (!updateStatus) {
         return res.status(400).json({ error: FILE_NOT_EXIST });

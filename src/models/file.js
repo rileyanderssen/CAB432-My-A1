@@ -5,6 +5,7 @@ const {
 const { 
     DeterminePaginationBounds 
 } = require("../helpers/data");
+const mongoose = require('mongoose');
 
 exports.upload = async (
     userId,
@@ -39,98 +40,100 @@ exports.upload = async (
     }
 }
 
-exports.getAll = (userId, pageNumber, titleFilter) => {
-    const { upperBound, lowerBound } = DeterminePaginationBounds(pageNumber);
+exports.getAll = async (userId, pageNumber, titleFilter) => {
+    const pageSize = 5;
 
-    let MockFileDBFiltered = MockFileDB;
-    if (titleFilter !== "") {
-        MockFileDBFiltered = MockFileDB.filter(file =>
-            file.title.toLowerCase().includes(titleFilter.toLowerCase())
-        );
-    }   
-
-    const userFiles = [];
-    for (let i = lowerBound; i <= upperBound; i++) {
-        if (MockFileDBFiltered[i]) {
-            if (MockFileDBFiltered[i].userId === userId) {
-                userFiles.push(MockFileDBFiltered[i]);
-            }
-        } else {
-            return userFiles;
-        }
+    const filter = { userKey: userId };
+    if (titleFilter) {
+        filter.title = { $regex: titleFilter, $options: "i" };
     }
+
+    const files = await File.find(filter)
+                            .skip((pageNumber - 1) * pageSize)
+                            .limit(pageSize);
+    return files;
+}
+
+exports.getByTitle = async (userId, title) => {
+    const file = await File.findOne({ title: title, userKey: userId });
+    if (file) {
+        return file;
+    }
+
+
+    return null;
+}
+
+exports.getById =  async (userId, fileId) => {
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        return null;
+    }
+
+    const file = await File.findOne({ _id: fileId, userKey: userId });
+    if (file) {
+        return file;
+    }
+
+    return null;
+}
+
+exports.deleteByTitle = async (userId, title) => {
+    const result = await File.deleteOne({ title: title, userKey: userId });
     
-    return userFiles;
+    return result.deletedCount === 1;
 }
 
-exports.getByTitle = (userId, title) => {
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].title === title && MockFileDB[i].userId === userId) {
-            return MockFileDB[i];
-        }
+exports.deleteById = async (userId, fileId) => {
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        return "Invalid ID";
     }
 
-    return null;
-}
-
-exports.getById = (userId, fileId) => {
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].fileId === fileId && MockFileDB[i].userId === userId) {
-            return MockFileDB[i];
-        }
-    }
-
-    return null;
-}
-
-exports.deleteByTitle = (userId, title) => {
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].title === title && MockFileDB[i].userId === userId) {
-            MockFileDB.splice(i, 1);       
-            return true;      
-        }
+    const deletedFile = await File.deleteOne({ _id: fileId, userKey: userId });
+    if (deletedFile) {
+        return true;
     }
 
     return false;
 }
 
-exports.deleteById = (userId, fileId) => {
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].fileId === fileId && MockFileDB[i].userId === userId) {
-            MockFileDB.splice(i, 1);       
-            return true;      
-        }
+exports.updateByTitle = async (userId, oldTitle, newTitle, newDescription) => {
+    const exists = await File.findOne({ title: oldTitle, userKey: userId });
+    if (!exists) {
+        return "Not Exists";
     }
 
-    return false;
+    const updatedFileExists = await File.findOne({ title: newTitle, userKey: userId });
+    if (updatedFileExists) {
+        return "Exists";
+    }
+
+    await File.updateOne(
+        { userKey: userId, title: oldTitle },  
+        { $set: { description: newDescription, title: newTitle } }  
+    );
+
+    return "Success";
 }
 
-exports.updateByTitle = (userId, oldTitle, newTitle, newDescription) => {
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].title === oldTitle && MockFileDB[i].userId === userId) {
-            if (newTitle !== "") {
-                MockFileDB[i].title = newTitle;
-            }
-            
-            MockFileDB[i].description = newDescription;
-            return true;
-        }
+exports.updateById = async (userId, fileId, newTitle, newDescription) => {
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+        return "Invalid ID";
     }
 
-    return false;
-}
-
-exports.updateById = (userId, fileId, newTitle, newDescription) => {
-    for (let i = 0; i < MockFileDB.length; i++) {
-        if (MockFileDB[i].fileId === fileId && MockFileDB[i].userId === userId) {
-            if (newTitle !== "") {
-                MockFileDB[i].title = newTitle;
-            }
-            
-            MockFileDB[i].description = newDescription;
-            return true;
-        }
+    const exists = await File.findOne({ _id: fileId, userKey: userId });
+    if (!exists) {
+        return "Not Exists";
     }
 
-    return false;
+    const updatedFileExists = await File.findOne({ title: newTitle, userKey: userId });
+    if (updatedFileExists) {
+        return "Exists";
+    }
+
+    await File.updateOne(
+        { userKey: userId, _id: fileId },  
+        { $set: { description: newDescription, title: newTitle } }  
+    );
+
+    return "Success";
 }
