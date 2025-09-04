@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.879.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "fluent-ffmpeg": "^2.1.3",

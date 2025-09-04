@@ -1,7 +1,36 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const { GetSecretValue, DB_CONNECTION_STRING_NAME } = require("./src/aws/secretsManager");
+
+// n11280559_13_connection_string_db -> this one
+// group13-secret-mongo-connection-string
 
 // move to secrets manager !!
 const connectionString = "mongodb+srv://rileyanderssen_db_user:73T0gU9rSgvAxElz@cab432clusterrm.zqkfbrq.mongodb.net/?retryWrites=true&w=majority&appName=CAB432ClusterRM";
+
+
+////////////////////////////////////////////////////
+//// USE THIS WHEN ON EC2 ////////////////////////////
+////////////////////////////////////////////////////
+
+
+// async function connectToDatabase() {
+//   try {
+//     // fetch secret from AWS
+//     const secret = await GetSecretValue(DB_CONNECTION_STRING_NAME);
+//     const connectionString = secret.connectionString;
+
+//     await mongoose.connect(connectionString, {
+//       useNewUrlParser: true,
+//       useUnifiedTopology: true,
+//     });
+
+//     console.log("Connected to MongoDB successfully");
+//   } catch (err) {
+//     console.error("Failed to connect to MongoDB:", err);
+//   }
+// }
+
+// connectToDatabase();
 
 mongoose.connect(connectionString, {
     useNewUrlParser: true,
