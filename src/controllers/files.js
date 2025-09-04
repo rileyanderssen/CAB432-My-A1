@@ -13,10 +13,12 @@ const {
   NO_FILES_UPLOADED,
   INVALID_PAGE_NO,
 } = require("../constants/error");
-const { s3 } = require("../config/aws");
+const { s3, S3_BUCKET_NAME } = require("../config/aws");
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
 
 exports.uploadFile = async (req, res) => {
   const file = req.file;
+  console.log(req.userDetails);
   if (!file) {
     return res.status(400).json({ error: NO_FILE });
   }
@@ -47,7 +49,7 @@ exports.uploadFile = async (req, res) => {
 
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,
-    Key: filePath,
+    Key: fileName,
   });
 
   await s3.send(command);

@@ -11,7 +11,7 @@ const s3 = new S3Client({ region: this.AWS_REGION });
 module.exports = {
   s3,
   AWS_REGION,
-  AWS_ACCESS_KEY_ID,
-  AWS_SECRET_ACCESS_KEY,
+  // AWS_ACCESS_KEY_ID,
+  // AWS_SECRET_ACCESS_KEY,
   S3_BUCKET_NAME,
 };
