@@ -13,9 +13,9 @@ const {
   NO_FILES_UPLOADED,
   INVALID_PAGE_NO,
 } = require("../constants/error");
-const { getPresignedUrl } = require("../services/s3Service");
+const { s3 } = require("../config/aws");
 
-exports.uploadFile = (req, res) => {
+exports.uploadFile = async (req, res) => {
   const file = req.file;
   if (!file) {
     return res.status(400).json({ error: NO_FILE });
@@ -45,13 +45,12 @@ exports.uploadFile = (req, res) => {
     return res.status(400).json({ error: DUPLICATE_TITLE });
   }
 
-  const presignedUrl = getPresignedUrl(fileName, "PUT", 3600);
-  const fileBuffer = fs.readFileSync(filePath);
-  fetch(presignedUrl, {
-    method: "PUT",
-    body: fileBuffer,
-    headers: { "Content-Type": fileType },
+  const command = new PutObjectCommand({
+    Bucket: S3_BUCKET_NAME,
+    Key: filePath,
   });
+
+  await s3.send(command);
 
   return res.status(200).json({ message: UPLOAD_SUCCESS });
 };
@@ -203,4 +202,3 @@ exports.updateFileById = async (req, res) => {
     newDescription: newDescription,
   });
 };
-
